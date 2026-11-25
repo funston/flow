@@ -1,0 +1,29 @@
+#!/bin/bash
+# flow: the gated issue-to-pull-request workflow as a plain command, for
+# coding agents that can run a shell command (Claude Code). It starts no
+# model: it runs the tests, checks the gates, keeps the state and prints the
+# task for the calling agent to carry out.
+#
+#   flow status
+#   flow issue ENG-123
+#
+# The project is the directory this is run from.
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+
+# This repository's own environment if it has one; otherwise any python3.
+# The workflow is standard library only (the optional `mcp` package is used
+# for Linear when it is installed).
+PYTHON="$ROOT/.venv/bin/python3"
+if [ ! -x "$PYTHON" ]; then
+    PYTHON="$(command -v python3)"
+fi
+if [ -z "$PYTHON" ]; then
+    echo "Error: no python3 found (looked for $ROOT/.venv and on PATH)" >&2
+    exit 1
+fi
+
+# The module path is passed as an argument, not through PYTHONPATH, so it
+# does not leak into the project's own test runs.
+exec "$PYTHON" -c 'import sys; sys.path.insert(0, sys.argv[1]); from flow.flow_cli import main; sys.exit(main(sys.argv[2:]))' \
+    "$ROOT/src" --project "$(pwd)" "$@"

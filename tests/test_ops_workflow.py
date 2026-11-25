@@ -1,4 +1,4 @@
-"""Unit tests for `bach.ops.workflow` — the gated `/flow` workflow shared by
+"""Unit tests for `flow.workflow` — the gated `/flow` workflow shared by
 the CLI and ACP surfaces.
 
 No mocks: every test builds a real git repository with a real pytest suite in
@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from bach.ops import workflow as wf  # noqa: E402
+from flow import workflow as wf  # noqa: E402
 
 BUGGY = "def clamp(x, lo, hi):\n    return max(lo, min(x, lo))\n"
 # Different length from BUGGY on purpose: CPython keys cached bytecode on
@@ -103,7 +103,7 @@ def test_detects_nothing_in_empty_dir(tmp_path):
 
 def test_state_lives_in_git_dir_and_is_never_tracked(repo):
     wf.run_flow(repo, "onboard")
-    assert (repo / ".git" / "bach-flow.json").exists()
+    assert (repo / ".git" / "flow.json").exists()
     assert git(repo, "status", "--porcelain") == ""
 
 
@@ -303,7 +303,7 @@ def test_review_with_needs_a_provider_name(repo):
     assert not wf.run_flow(repo, "review --with").ok
 
 
-def test_bach_own_files_do_not_invalidate_or_enter_the_review(repo):
+def test_the_tools_own_files_do_not_invalidate_or_enter_the_review(repo):
     to_red(repo)
     wf.run_flow(repo, "fix")
     (repo / "calc.py").write_text(FIXED)
@@ -319,7 +319,7 @@ def test_bach_own_files_do_not_invalidate_or_enter_the_review(repo):
     assert ".ranger" not in (repo / "PR-DRAFT.md").read_text()
 
 
-def test_pr_create_commits_the_change_without_bach_artifacts(repo, tmp_path_factory):
+def test_pr_create_commits_the_change_without_tool_artifacts(repo, tmp_path_factory):
     remote = tmp_path_factory.mktemp("remote")
     subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
     git(repo, "remote", "add", "origin", str(remote))
@@ -388,9 +388,9 @@ def test_reset_clears_state(repo):
     assert wf.load_state(repo).baseline is None
 
 
-def test_tests_run_on_the_users_python_not_bachs(tmp_path, monkeypatch):
+def test_tests_run_on_the_users_python_not_the_tools(tmp_path, monkeypatch):
     """A project with no virtualenv must be tested with the Python on PATH
-    (where its dependencies are installed), not the interpreter BACH runs in.
+    (where its dependencies are installed), not the interpreter flow runs in.
     Seen live: `/flow onboard` failed with "No module named 'torch'"."""
     fake_bin = tmp_path / "bin"
     fake_bin.mkdir()

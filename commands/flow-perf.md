@@ -2,7 +2,7 @@
 description: Flow: Investigate a performance issue: benchmark first, rank candidates
 argument-hint: "<issue text or path>"
 ---
-<!-- flow helper: installed by integrations/claude-code/install.py -->
+<!-- flow helper: installed by install.py -->
 
 Investigate this performance issue. Do not modify code yet.
 

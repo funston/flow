@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from bach.ops import workflow as wf  # noqa: E402
+from flow import workflow as wf  # noqa: E402
 
 FAKE_GH = r"""#!/usr/bin/env python3
 import json, os, sys
@@ -118,9 +118,9 @@ def test_review_reads_the_pull_request_without_touching_the_working_tree(repo):
     assert "Reviewing pull request #7 Speed up add" in review.message
     assert "calc.py" in review.message and "+1  -1" in review.message
     # The reviewer is given the change and told how to read the PR's files.
-    assert "return x - y" in review.agent_prompt and "refs/bach/pr-7" in review.agent_prompt
+    assert "return x - y" in review.agent_prompt and "refs/flow/pr-7" in review.agent_prompt
     assert "do not post anything to GitHub" in review.agent_prompt
-    shown = subprocess.run(["git", "show", "refs/bach/pr-7:calc.py"], cwd=work, capture_output=True, text=True)
+    shown = subprocess.run(["git", "show", "refs/flow/pr-7:calc.py"], cwd=work, capture_output=True, text=True)
     assert "return x - y" in shown.stdout
     # Still on main, file untouched, nothing sent to GitHub.
     assert (work / "calc.py").read_text().endswith("return x + y\n")

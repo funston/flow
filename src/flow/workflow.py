@@ -17,7 +17,7 @@ asked to do the parts that need judgment (trace a root cause, write a test,
 write a fix, review a diff), and it cannot advance a phase by claiming
 success — phases advance on observed exit codes and diff hashes.
 
-State lives inside the git directory (`.git/bach-flow.json`) so it is
+State lives inside the git directory (`.git/flow.json`) so it is
 per-clone and can never be committed by accident.
 """
 from __future__ import annotations
@@ -46,10 +46,10 @@ PHASES: list[tuple[str, str]] = [
 ]
 PHASE_NAMES = [name for name, _ in PHASES]
 
-_STATE_FILE = "bach-flow.json"
+_STATE_FILE = "flow.json"
 _PR_DRAFT = "PR-DRAFT.md"         # the pull request description, in the project directory
-_SCOPE_FILE = "bach-flow-scope"   # the directory chosen with `/flow scope`
-_SCOPE_DIR = "bach-flow"          # per-directory state lives in here
+_SCOPE_FILE = "flow-scope"   # the directory chosen with `/flow scope`
+_SCOPE_DIR = "flow"          # per-directory state lives in here
 _MAX_DIFF_CHARS = 12_000
 _INSTRUCTION_FILES = (
     "TASK.md", "README.md", "README.rst", "CONTRIBUTING.md",
@@ -145,7 +145,7 @@ class FlowResult:
     agent_prompt: Optional[str] = None
     ok: bool = True
     # Set only by `/flow review`. The surface runs REVIEW_PROMPT through a
-    # separate read-only reviewer (bach.ops.critique), optionally on the
+    # separate read-only reviewer (flow.critique), optionally on the
     # REVIEWER provider, then calls `record_review(REVIEW_FINGERPRINT)`.
     review_prompt: Optional[str] = None
     reviewer: str = ""
@@ -207,7 +207,7 @@ def scope_of(root: Path) -> str:
 
 def _scoped_file(root: Path, name: str) -> Optional[Path]:
     """Where a per-scope file lives inside the git directory: the plain
-    name at the top of the repository, `bach-flow/<scope>.<name>` below it."""
+    name at the top of the repository, `flow/<scope>.<name>` below it."""
     git_dir = _git_dir(root)
     if git_dir is None:
         return None
@@ -219,7 +219,7 @@ def _scoped_file(root: Path, name: str) -> Optional[Path]:
 
 def _state_path(root: Path) -> Path:
     path = _scoped_file(root, _STATE_FILE)
-    return path if path is not None else root / ".bach" / _STATE_FILE
+    return path if path is not None else root / ".flow" / _STATE_FILE
 
 
 def _chosen_scope(top: Path) -> str:
@@ -285,9 +285,9 @@ def review_base(project_path: str | Path) -> str:
     return _base_ref(root, load_state(root))
 
 
-def _is_bach_artifact(path: str) -> bool:
-    """Files BACH itself drops in a project (Ranger stats, session
-    transcripts). They are not part of anyone's change: they must not
+def _is_tool_artifact(path: str) -> bool:
+    """Files tooling drops in a project (the PR draft, an agent's stats and
+    session transcripts). They are not part of anyone's change: they must not
     invalidate a verified diff, appear in a review, or land in a PR."""
     name = path.rsplit("/", 1)[-1]
     if path in (".ranger.json", ".ranger_stats", _PR_DRAFT):
@@ -296,14 +296,14 @@ def _is_bach_artifact(path: str) -> bool:
 
 
 def _changed_paths(root: Path, base: str) -> tuple[list[str], list[str]]:
-    """(paths that differ from BASE, untracked paths), minus BACH's own files."""
+    """(paths that differ from BASE, untracked paths), minus flow's own files."""
     # --relative: only files under ROOT, named relative to it. In a large
     # repository, changes elsewhere are not part of this piece of work.
     _, tracked = _git(root, "diff", base, "--name-only", "--relative")
     _, untracked = _git(root, "ls-files", "--others", "--exclude-standard")
     return (
         sorted(p for p in tracked.splitlines() if p),
-        sorted(p for p in untracked.splitlines() if p and not _is_bach_artifact(p)),
+        sorted(p for p in untracked.splitlines() if p and not _is_tool_artifact(p)),
     )
 
 
@@ -372,18 +372,18 @@ def detect_test_command(root: Path) -> str:
 
 
 def _project_python(root: Path) -> str:
-    """Prefer the project's own virtualenv over the one BACH runs in."""
+    """Prefer the project's own virtualenv over the one flow runs in."""
     for candidate in (".venv/bin/python", "venv/bin/python"):
         if (root / candidate).exists():
             return str(root / candidate)
     # No project virtualenv: use the Python the user's shell would run,
     # which is where the project's dependencies (torch, numpy, ...) live.
-    # BACH's own interpreter only has BACH's dependencies, so it is the
+    # flow's own interpreter only has flow's dependencies, so it is the
     # last resort, not the default.
-    bach_python = Path(sys.executable).resolve()
+    own_python = Path(sys.executable).resolve()
     for name in ("python3", "python"):
         found = shutil.which(name)
-        if found and Path(found).resolve() != bach_python:
+        if found and Path(found).resolve() != own_python:
             return found
     return sys.executable
 
@@ -1056,7 +1056,7 @@ def _issue_menu(root: Path) -> str:
 def _linear():
     """The Linear module, imported on first use so `/flow` stays importable
     (and fast) without the MCP client."""
-    from bach.ops import linear
+    from flow import linear
 
     return linear
 
@@ -1303,7 +1303,7 @@ def _linear_phase(root: Path, state: FlowState, args: str, force: bool, provider
         return FlowResult(
             "**Linear is not set up.** Export `LINEAR_API_KEY` (a personal API "
             "key from Linear: Settings, Security & access) in your shell "
-            "profile, then restart the editor or terminal Bach runs in.",
+            "profile, then restart the editor or terminal.",
             state, ok=False,
         )
     try:
@@ -1980,7 +1980,7 @@ def _pr(root: Path, state: FlowState, args: str, force: bool, provider: str = ""
     if shutil.which("gh") is None:
         return FlowResult("**/flow pr:** the `gh` CLI is not installed.", state, ok=False)
 
-    # Stage tracked changes plus new files, but never BACH's own artifacts.
+    # Stage tracked changes plus new files, but never flow's own artifacts.
     new_files = _changed_paths(root, "HEAD")[1]
     steps = [
         ["git", "add", "--update", "--", "."],
@@ -2011,7 +2011,7 @@ def _pr(root: Path, state: FlowState, args: str, force: bool, provider: str = ""
 # Reviewing someone else's pull request
 # ---------------------------------------------------------------------------
 
-_PR_REVIEWS_FILE = "bach-flow-pr-reviews.json"   # {pr number: head commit reviewed}
+_PR_REVIEWS_FILE = "flow-pr-reviews.json"   # {pr number: head commit reviewed}
 _PR_FIELDS = (
     "number,title,author,headRefName,baseRefName,headRefOid,isDraft,state,"
     "reviewDecision,mergeable,statusCheckRollup,files,url,body,additions,deletions"
@@ -2104,7 +2104,7 @@ def _pr_test_run(root: Path, state: FlowState, ref: str) -> str:
     import tempfile
 
     scope = scope_of(root)
-    holder = Path(tempfile.mkdtemp(prefix="bach-pr-"))
+    holder = Path(tempfile.mkdtemp(prefix="flow-pr-"))
     tree = holder / "tree"
     code, out = _git(root, "worktree", "add", "--detach", str(tree), ref)
     if code != 0:
@@ -2208,7 +2208,7 @@ def _pr_review(root: Path, state: FlowState, args: str, force: bool, provider: s
     title = f"#{number} {pr.get('title', '')}"
 
     if action in ("review", "test"):
-        ref = f"refs/bach/pr-{number}"
+        ref = f"refs/flow/pr-{number}"
         code, out = _git(root, "fetch", "--quiet", "origin", f"+pull/{number}/head:{ref}", timeout=120.0)
         if code != 0:
             return FlowResult(

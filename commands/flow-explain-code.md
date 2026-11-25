@@ -2,7 +2,7 @@
 description: Flow: Explain one function or file well enough to defend it
 argument-hint: "<function or file>"
 ---
-<!-- flow helper: installed by integrations/claude-code/install.py -->
+<!-- flow helper: installed by install.py -->
 
 Explain $ARGUMENTS to me so I can defend it in review.
 

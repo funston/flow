@@ -116,9 +116,9 @@ async def _call_async(tool: str, arguments: dict) -> Any:
     key = os.environ.get("LINEAR_API_KEY")
     if not key:
         raise LinearError(
-            "LINEAR_API_KEY is not set in the environment Bach is running in. "
+            "LINEAR_API_KEY is not set in the environment this is running in. "
             "Export it in your shell profile, then restart the editor or "
-            "terminal Bach was started from."
+            "terminal it was started from."
         )
     from mcp.client.streamable_http import streamablehttp_client
 
@@ -155,7 +155,7 @@ def _http_messages(url: str, key: str, payload: dict, session: str) -> tuple[lis
         "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
         "Accept": "application/json, text/event-stream",
-        "User-Agent": "bach-flow",
+        "User-Agent": "flow",
     }
     if session:
         headers["Mcp-Session-Id"] = session
@@ -202,7 +202,7 @@ def _call_plain(tool: str, arguments: dict) -> Any:
         "jsonrpc": "2.0", "id": 1, "method": "initialize",
         "params": {
             "protocolVersion": "2025-03-26", "capabilities": {},
-            "clientInfo": {"name": "bach-flow", "version": "1"},
+            "clientInfo": {"name": "flow", "version": "1"},
         },
     }, "")
     _http_messages(url, key, {"jsonrpc": "2.0", "method": "notifications/initialized"}, session)

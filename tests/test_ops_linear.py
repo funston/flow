@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
-from bach.ops import linear, workflow as wf  # noqa: E402
+from flow import linear, workflow as wf  # noqa: E402
 
 SERVER = '''
 import json, sys
@@ -230,7 +230,7 @@ def _serve_plain_mcp(seen, event_stream):
 
 @pytest.mark.parametrize("event_stream", [False, True])
 def test_lists_issues_over_plain_http_when_mcp_package_is_missing(monkeypatch, event_stream):
-    from bach.ops import linear
+    from flow import linear
 
     seen = []
     server = _serve_plain_mcp(seen, event_stream)

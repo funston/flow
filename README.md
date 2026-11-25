@@ -1,3 +1,5 @@
+![Flow: AI coding agent workflow](logo.jpeg)
+
 # flow
 
 Slash commands for Claude Code that take a change from issue to pull request
@@ -15,7 +17,7 @@ agent reads and writes code; you decide at each step.
 
 ```
 git clone https://github.com/funston/flow.git ~/flow
-python3 ~/flow/integrations/claude-code/install.py
+python3 ~/flow/install.py
 ```
 
 Start a new Claude Code session and type `/flow-help`.
@@ -86,19 +88,17 @@ for steering the agent (`/flow-refocus`, `/flow-prove-it`, `/flow-trim-diff`,
 
 | Path | What |
 | --- | --- |
-| `bin/bach-flow` | The command the slash commands call |
-| `src/bach/ops/workflow.py` | The steps, gates and saved state |
-| `src/bach/ops/linear.py` | Linear, through its MCP server |
-| `src/bach/ops/flow_cli.py` | Command-line front end |
-| `integrations/claude-code/` | Installer and the prompt-only helpers |
-| `test/unit/` | Tests: real git repositories and real pytest runs |
-
-The code is developed in the BACH coding agent and copied here with
-`tools/sync.sh`.
+| `bin/flow` | The command the slash commands call |
+| `install.py` | Writes the slash commands into `~/.claude/commands` |
+| `commands/` | Prompt-only helpers, installed as they are |
+| `src/flow/workflow.py` | The steps, gates and saved state |
+| `src/flow/linear.py` | Linear, through its MCP server |
+| `src/flow/flow_cli.py` | Command-line front end |
+| `tests/` | Tests: real git repositories and real pytest runs |
 
 ## Tests
 
 ```
 python3 -m pip install pytest mcp
-python3 -m pytest test/unit -q
+python3 -m pytest tests -q
 ```
