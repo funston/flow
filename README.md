@@ -89,8 +89,8 @@ for steering the agent (`/flow-refocus`, `/flow-prove-it`, `/flow-trim-diff`,
 | Path | What |
 | --- | --- |
 | `bin/flow` | The command the slash commands call |
-| `install.py` | Writes the slash commands into `~/.claude/commands` |
-| `commands/` | Prompt-only helpers, installed as they are |
+| `install.py` | Generates the 15 step commands into `~/.claude/commands`; each one calls `bin/flow` by its path on your machine, so they are written at install time and are not files in this repository |
+| `helpers/` | The 6 prompt-only helpers (`/flow-refocus`, `/flow-prove-it`, ...), copied as they are |
 | `src/flow/workflow.py` | The steps, gates and saved state |
 | `src/flow/linear.py` | Linear, through its MCP server |
 | `src/flow/flow_cli.py` | Command-line front end |

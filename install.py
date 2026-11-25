@@ -107,7 +107,7 @@ PLAN = """\
 
 # Prompt-only helpers ("steering" commands). They carry no gate and run no
 # tool; they are installed as they are.
-HELPERS = REPO / "commands"
+HELPERS = REPO / "helpers"
 HELPER_MARKER = "<!-- flow helper: installed by install.py -->"
 
 
