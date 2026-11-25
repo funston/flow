@@ -1,0 +1,29 @@
+#!/bin/bash
+# BACH: the /flow workflow as a plain command, for agents that can run a
+# shell command (Claude Code). No reasoning model is started: this runs
+# the deterministic half of /flow (tests, gates, state, issue sources)
+# and prints the task for the calling agent to carry out.
+#
+#   bach-flow status
+#   bach-flow issue ENG-123
+#
+# The project is the directory this is run from.
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+INVOKE_CWD="$(pwd)"
+
+# BACH's own environment if it has one; otherwise any python3. The workflow
+# is standard library only, so a bare copy on a remote machine works (only
+# the Linear issue source needs BACH's dependencies).
+PYTHON="$PROJECT_ROOT/.venv/bin/python3"
+if [ ! -x "$PYTHON" ]; then
+    PYTHON="$(command -v python3)"
+fi
+if [ -z "$PYTHON" ]; then
+    echo "Error: no python3 found (looked for $PROJECT_ROOT/.venv and on PATH)" >&2
+    exit 1
+fi
+cd "$PROJECT_ROOT"
+exec env PYTHONPATH="$PROJECT_ROOT/src${PYTHONPATH:+:$PYTHONPATH}" \
+    "$PYTHON" -m bach.ops.flow_cli --project "$INVOKE_CWD" "$@"
