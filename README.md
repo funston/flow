@@ -1,4 +1,4 @@
-<p align="center"><img src="icon.jpeg" width="280" alt="Flow: a black cat at a glowing code panel"></p>
+![Flow: Agentic Engineering](logo.jpeg)
 
 # flow
 
